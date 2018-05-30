@@ -3,7 +3,12 @@ package com.juanse.smack.Controller
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.design.widget.Snackbar
+import android.text.Editable
+import android.view.View
+import android.widget.Toast
 import com.juanse.smack.R
+import com.juanse.smack.Services.AuthService
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
 
@@ -51,7 +56,35 @@ class CreateUserActivity : AppCompatActivity() {
     }
 
     private fun onCreateUserClick() {
+        // Extract input
+        val email: String? = signUpEmailText.text.toString().takeIf { it.isNotEmpty() } ?: null
+        val password: String? = signUpPasswordText.text.toString().takeIf { it.isNotEmpty() } ?:  null
 
+        var emailValid = email != null
+        var passwordValid = password != null
+
+        // Validation
+        if (!emailValid && !passwordValid) {
+            showError(signUpCreateUserButton, "Must enter a valid email and password")
+        } else if (!emailValid) {
+            showError(signUpCreateUserButton, "Must enter an email")
+        } else if (!passwordValid) {
+            showError(signUpCreateUserButton, "Must enter a password")
+        }
+
+        if (emailValid && passwordValid) {
+            AuthService.registerUser(this, email!!.toString(), password!!.toString()) { success ->
+                if (success) {
+                    Toast.makeText(this, "Succesfully Registered User", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Something went wrong, please try again", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun showError(view: View, message: String) {
+        Snackbar.make(view, message, Snackbar.LENGTH_SHORT).setAction("Action", null).show()
     }
 
 }
