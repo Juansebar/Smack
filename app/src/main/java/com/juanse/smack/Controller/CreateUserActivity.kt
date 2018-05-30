@@ -1,8 +1,9 @@
-package com.juanse.smack
+package com.juanse.smack.Controller
 
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.juanse.smack.R
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
 

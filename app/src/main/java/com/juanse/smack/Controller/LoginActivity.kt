@@ -1,10 +1,9 @@
-package com.juanse.smack
+package com.juanse.smack.Controller
 
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import kotlinx.android.synthetic.main.activity_create_user.*
+import com.juanse.smack.R
 import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity : AppCompatActivity() {
