@@ -1,5 +1,6 @@
 package com.juanse.smack
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.design.widget.NavigationView
@@ -11,6 +12,8 @@ import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
+import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,6 +26,8 @@ class MainActivity : AppCompatActivity() {
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
+
+        setupViews()
     }
 
     override fun onBackPressed() {
@@ -33,16 +38,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loginButtonNavClicked(view: View) {
+    private fun setupViews() {
+        loginButtonNavHeader.setOnClickListener { loginButtonNavClicked() }
+        addChannelButtonNavHeader.setOnClickListener { addChannelClicked() }
+        sendMessageButton.setOnClickListener { sendMessageButtonClicked() }
+    }
+
+    private fun loginButtonNavClicked() {
+        val loginIntent = Intent(this, LoginActivity::class.java)
+        startActivity(loginIntent)
+    }
+
+    private fun addChannelClicked() {
 
     }
 
-    private fun addChannelClicked(view: View) {
+    private fun sendMessageButtonClicked() {
 
-    }
-
-    private fun sendMessageButtonClicked(view: View) {
-        
     }
 
 }
