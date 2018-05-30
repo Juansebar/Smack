@@ -1,8 +1,10 @@
 package com.juanse.smack
 
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import kotlinx.android.synthetic.main.activity_create_user.*
 import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity : AppCompatActivity() {
@@ -24,7 +26,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signUpButtonClicked() {
-
+        val signUpIntent = Intent(this, CreateUserActivity::class.java)
+        startActivity(signUpIntent)
     }
 
 }
