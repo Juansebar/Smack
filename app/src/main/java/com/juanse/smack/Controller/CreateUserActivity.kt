@@ -1,15 +1,16 @@
 package com.juanse.smack.Controller
 
+import android.content.Intent
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.text.Editable
+import android.support.v4.content.LocalBroadcastManager
 import android.view.View
 import android.widget.Toast
 import com.juanse.smack.R
 import com.juanse.smack.Services.AuthService
-import com.juanse.smack.Services.UserDataService
+import com.juanse.smack.Utilities.BROADCAST_USER_DATA_CHANGE
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
 
@@ -29,6 +30,8 @@ class CreateUserActivity : AppCompatActivity() {
         signUpAvatarImage.setOnClickListener { generateAvatarImage() }
         backgroundGeneratorButton.setOnClickListener { onBackgroundGeneratorButtonClick() }
         signUpCreateUserButton.setOnClickListener { onCreateUserClick() }
+
+        signUpSpinner.visibility = View.INVISIBLE
     }
 
     private fun generateAvatarImage() {
@@ -57,10 +60,12 @@ class CreateUserActivity : AppCompatActivity() {
     }
 
     private fun onCreateUserClick() {
+        enableSpinner(true)
+
         // Extract input
         val username: String? = signUpUsernameText.text.toString().takeIf { it.isNotEmpty() }
-        val email: String? = signUpEmailText.text.toString().takeIf { it.isNotEmpty() } ?: null
-        val password: String? = signUpPasswordText.text.toString().takeIf { it.isNotEmpty() } ?:  null
+        val email: String? = signUpEmailText.text.toString().takeIf { it.isNotEmpty() }
+        val password: String? = signUpPasswordText.text.toString().takeIf { it.isNotEmpty() }
 
         val emailValid = email != null
         val passwordValid = password != null
@@ -68,44 +73,64 @@ class CreateUserActivity : AppCompatActivity() {
 
         // Validation
         if (!emailValid && !passwordValid && !usernameValid) {
-            showError(signUpCreateUserButton, "Must enter a valid username, email and password")
+            showSnackbarError(signUpCreateUserButton, "Must enter a valid username, email and password")
         } else if (!emailValid) {
-            showError(signUpCreateUserButton, "Must enter an email")
+            showSnackbarError(signUpCreateUserButton, "Must enter an email")
         } else if (!passwordValid) {
-            showError(signUpCreateUserButton, "Must enter a password")
+            showSnackbarError(signUpCreateUserButton, "Must enter a password")
         } else if (!usernameValid) {
-            showError(signUpCreateUserButton, "Must enter a username")
+            showSnackbarError(signUpCreateUserButton, "Must enter a username")
         }
 
         if (emailValid && passwordValid && usernameValid) {
             AuthService.registerUser(this, email!!, password!!) { success ->
                 if (success) {
-                    Toast.makeText(this, "Succesfully Registered User", Toast.LENGTH_SHORT).show()
+                    showToast("Succesfully Registered User")
 
                     AuthService.loginUser(this, email, password) { loginSuccess ->
                         if (loginSuccess) {
-                            Toast.makeText(this, "Successfully logged in user", Toast.LENGTH_SHORT).show()
+                            showToast("Successfully logged in user")
 
                             AuthService.createUser(this, username!!, email, userAvatar, avatarColor) { success ->
                                 if (success) {
-                                    Toast.makeText(this, "User created!", Toast.LENGTH_SHORT).show()
+                                    showToast("User created!")
+
+                                    // Create Action Intent and Send a Local Broadcast (Notification in iOS)
+                                    val userDataChange = Intent(BROADCAST_USER_DATA_CHANGE)
+                                    LocalBroadcastManager.getInstance(this).sendBroadcast(userDataChange)
+
+                                    enableSpinner(false)
                                     finish() // Dismisses an activity
                                 } else {
-                                    Toast.makeText(this, "User creation FAILED!", Toast.LENGTH_SHORT).show()
+                                    showToast("User creation FAILED!", true)
                                 }
                             }
                         } else {
-                            Toast.makeText(this, "Couldn't login, please try again", Toast.LENGTH_SHORT).show()
+                            showToast("Couldn't login, please try again", true)
                         }
                     }
                 } else {
-                    Toast.makeText(this, "Something went wrong, please try again", Toast.LENGTH_SHORT).show()
+                    showToast("Something went wrong, please try again", true)
                 }
             }
         }
+
     }
 
-    private fun showError(view: View, message: String) {
+    private fun enableSpinner(enable: Boolean) {
+        signUpSpinner.visibility = if (enable) View.VISIBLE else View.INVISIBLE
+        signUpCreateUserButton.isEnabled = !enable
+        signUpAvatarImage.isEnabled = !enable
+        backgroundGeneratorButton.isEnabled = !enable
+    }
+
+    private fun showToast(message: String, isError: Boolean = false) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+        if (isError) enableSpinner(false)
+    }
+
+    private fun showSnackbarError(view: View, message: String) {
         Snackbar.make(view, message, Snackbar.LENGTH_SHORT).setAction("Action", null).show()
     }
 
