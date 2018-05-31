@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                         val channleDescription = nameTextField.text.toString()
 
                         // Create Channel with the channel name and description
-
+                        socket.emit("newChannel", channleName, channleDescription)
                     }
                     .setNegativeButton("Cancel") { dialog, which ->
                         // Cancel and close dialog
