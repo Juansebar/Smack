@@ -20,12 +20,16 @@ import com.juanse.smack.R
 import com.juanse.smack.Services.AuthService
 import com.juanse.smack.Services.UserDataService
 import com.juanse.smack.Utilities.BROADCAST_USER_DATA_CHANGE
+import com.juanse.smack.Utilities.SOCKET_URL
+import io.socket.client.IO
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
+
+    val socket = IO.socket(SOCKET_URL)
 
     // Called when it receives broadcast
     private val userDataChangeReceiver = object : BroadcastReceiver() {
@@ -55,12 +59,28 @@ class MainActivity : AppCompatActivity() {
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
 
+        setupViews()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
         // Register a broadcast Receiver
         LocalBroadcastManager.getInstance(this).registerReceiver(userDataChangeReceiver, IntentFilter(BROADCAST_USER_DATA_CHANGE))
 
-        hideKeyboard()
+        socket.connect()
+    }
 
-        setupViews()
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(userDataChangeReceiver)
+
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        socket.disconnect()
+
+        super.onDestroy()
     }
 
     override fun onBackPressed() {
@@ -112,13 +132,10 @@ class MainActivity : AppCompatActivity() {
 
                         // Create Channel with the channel name and description
 
-
-                        hideKeyboard()
                     }
                     .setNegativeButton("Cancel") { dialog, which ->
                         // Cancel and close dialog
 
-                        hideKeyboard()
                     }
                     .show()
         } else {
@@ -127,7 +144,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendMessageButtonClicked() {
-
+        hideKeyboard()
     }
 
     fun hideKeyboard() {
@@ -141,3 +158,5 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+
