@@ -16,12 +16,15 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.juanse.smack.Model.Channel
 import com.juanse.smack.R
 import com.juanse.smack.Services.AuthService
+import com.juanse.smack.Services.MessageService
 import com.juanse.smack.Services.UserDataService
 import com.juanse.smack.Utilities.BROADCAST_USER_DATA_CHANGE
 import com.juanse.smack.Utilities.SOCKET_URL
 import io.socket.client.IO
+import io.socket.emitter.Emitter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -30,6 +33,18 @@ import kotlinx.android.synthetic.main.nav_header_main.*
 class MainActivity : AppCompatActivity() {
 
     val socket = IO.socket(SOCKET_URL)
+
+    private val onNewChannel = Emitter.Listener { args ->
+        // To run on main thread
+        runOnUiThread {
+            val channelName = args[0] as String
+            val channelDescription = args[1] as String
+            val channelId = args[2] as String
+
+            MessageService.channels.add(Channel(channelName, channelDescription, channelId))
+            println("$channelName  $channelDescription  $channelId")
+        }
+    }
 
     // Called when it receives broadcast
     private val userDataChangeReceiver = object : BroadcastReceiver() {
@@ -59,6 +74,11 @@ class MainActivity : AppCompatActivity() {
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
 
+        socket.connect()
+
+        // In order to receive events and handles it on "onNewChannel"
+        socket.on("channelCreated", onNewChannel)
+
         setupViews()
     }
 
@@ -67,18 +87,11 @@ class MainActivity : AppCompatActivity() {
 
         // Register a broadcast Receiver
         LocalBroadcastManager.getInstance(this).registerReceiver(userDataChangeReceiver, IntentFilter(BROADCAST_USER_DATA_CHANGE))
-
-        socket.connect()
-    }
-
-    override fun onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(userDataChangeReceiver)
-
-        super.onPause()
     }
 
     override fun onDestroy() {
         socket.disconnect()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(userDataChangeReceiver)
 
         super.onDestroy()
     }
@@ -127,11 +140,11 @@ class MainActivity : AppCompatActivity() {
                         val nameTextField = dialogView.findViewById<EditText>(R.id.addChannelNameText)
                         val descriptionTextField = dialogView.findViewById<EditText>(R.id.addChannelDescriptionText)
 
-                        val channleName = nameTextField.text.toString()
-                        val channleDescription = nameTextField.text.toString()
+                        val channelName = nameTextField.text.toString()
+                        val channelDescription = descriptionTextField.text.toString()
 
                         // Create Channel with the channel name and description
-                        socket.emit("newChannel", channleName, channleDescription)
+                        socket.emit("newChannel", channelName, channelDescription)
                     }
                     .setNegativeButton("Cancel") { dialog, which ->
                         // Cancel and close dialog
