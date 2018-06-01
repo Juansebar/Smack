@@ -38,7 +38,7 @@ class LoginActivity : AppCompatActivity() {
         val password = loginPasswordText.text.toString().takeIf { it.isNotEmpty() }
 
         if (email != null && password != null) {
-            AuthService.loginUser(this, email, password) { success ->
+            AuthService.loginUser(email, password) { success ->
                 if (success) {
                     println("token: ${App.sharedPreferences.authToken}")
                     AuthService.findUserByEmail(this) { findSuccess ->

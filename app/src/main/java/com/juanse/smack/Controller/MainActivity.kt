@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Message
 import android.support.design.widget.Snackbar
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.GravityCompat
@@ -38,36 +39,12 @@ class MainActivity : AppCompatActivity() {
     // Adapter
     lateinit var channelAdapter: ArrayAdapter<Channel>
 
-    // Called when it receives broadcast
-    private val userDataChangeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (App.sharedPreferences.isLoggedIn) {
-                // update elements in nav header
-                userNameNavHeader.text = UserDataService.name
-                userEmailNavHeader.text = UserDataService.email
-
-                val resourceId = resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
-                userImageNavHeader.setImageResource(resourceId)
-
-                userImageNavHeader.setBackgroundColor(UserDataService.returnAvatarColor(UserDataService.avatarColor))
-
-                loginButtonNavHeader.text = "Logout"
-
-                // Get messages at login
-                if (context != null) {
-                    MessageService.getChannels(context) { complete ->
-                        if (complete) {
-                            /**
-                             * This is like a reload data
-                             */
-                            channelAdapter.notifyDataSetChanged()
-                        }
-
-                    }
-                }
-            }
+    private var selectedChannel: Channel? = null
+        set(value) {
+            if (value != null) else return
+            field = value  // Sets the value
+            updateWithChannel()
         }
-    }
 
     /**
      * Life Cycle
@@ -122,6 +99,11 @@ class MainActivity : AppCompatActivity() {
         loginButtonNavHeader.setOnClickListener { loginButtonNavClicked() }
         addChannelButtonNavHeader.setOnClickListener { addChannelClicked() }
         sendMessageButton.setOnClickListener { sendMessageButtonClicked() }
+
+        // Channel List Listener
+        channel_list.setOnItemClickListener { _, _, position, _ ->
+            didClickChannel(position)
+        }
     }
 
     private fun setupAdapters() {           //Context              View type                    Data source
@@ -161,6 +143,52 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Called when it receives broadcast
+    private val userDataChangeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (App.sharedPreferences.isLoggedIn) {
+                // update elements in nav header
+                userNameNavHeader.text = UserDataService.name
+                userEmailNavHeader.text = UserDataService.email
+
+                val resourceId = resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
+                userImageNavHeader.setImageResource(resourceId)
+
+                userImageNavHeader.setBackgroundColor(UserDataService.returnAvatarColor(UserDataService.avatarColor))
+
+                loginButtonNavHeader.text = "Logout"
+
+                // Get messages at login
+                if (context != null) {
+                    MessageService.getChannels { complete ->
+                        if (complete) {
+                            /**
+                             * This is like a reload data
+                             */
+                            if (MessageService.channels.count() > 0) {
+                                selectedChannel = MessageService.channels.first()
+                                channelAdapter.notifyDataSetChanged()
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateWithChannel() {
+        println("#${selectedChannel?.name}")
+        mainChannelName.text = "#${selectedChannel?.name}"
+
+        // Download messages for channel
+    }
+
+    private fun didClickChannel(position: Int) {
+        selectedChannel = MessageService.channels[position]
+        drawer_layout.closeDrawer(GravityCompat.START)
+    }
+
     private fun addChannelClicked() {
         if (App.sharedPreferences.isLoggedIn) {
             val builder = AlertDialog.Builder(this)
@@ -170,7 +198,7 @@ class MainActivity : AppCompatActivity() {
 
             // Build dialog
             builder.setView(dialogView)
-                    .setPositiveButton("Add") { dialog, which ->
+                    .setPositiveButton("Add") { _, _ ->
                         // Perform some logic when clicked
 
                         // For Dialogs must access the view the old way by ID's
@@ -183,7 +211,7 @@ class MainActivity : AppCompatActivity() {
                         // Create Channel with the channel name and description
                         socket.emit("newChannel", channelName, channelDescription)
                     }
-                    .setNegativeButton("Cancel") { dialog, which ->
+                    .setNegativeButton("Cancel") { _, _ ->
                         // Cancel and close dialog
 
                     }
