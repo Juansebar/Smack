@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
-import com.android.volley.toolbox.Volley
+import com.juanse.smack.Controller.App
 import com.juanse.smack.Model.Channel
 import com.juanse.smack.Utilities.URL_GET_CHANNELS
 import org.json.JSONException
@@ -38,11 +38,11 @@ object MessageService {
             }
 
             override fun getHeaders(): MutableMap<String, String> {
-                return hashMapOf("Authorization" to "Bearer ${AuthService.authToken}")
+                return hashMapOf("Authorization" to "Bearer ${App.sharedPreferences.authToken}")
             }
         }
 
-        Volley.newRequestQueue(context).add(channelsRequest)
+        App.sharedPreferences.requestQueue.add(channelsRequest)
     }
 
 }

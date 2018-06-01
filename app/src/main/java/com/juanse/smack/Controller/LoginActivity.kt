@@ -40,7 +40,7 @@ class LoginActivity : AppCompatActivity() {
         if (email != null && password != null) {
             AuthService.loginUser(this, email, password) { success ->
                 if (success) {
-                    println("token: ${AuthService.authToken}")
+                    println("token: ${App.sharedPreferences.authToken}")
                     AuthService.findUserByEmail(this) { findSuccess ->
                         if (findSuccess) {
                             enableSpinner(false)
