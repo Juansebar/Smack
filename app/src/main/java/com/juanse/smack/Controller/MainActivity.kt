@@ -13,6 +13,7 @@ import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -34,17 +35,8 @@ class MainActivity : AppCompatActivity() {
 
     val socket = IO.socket(SOCKET_URL)
 
-    private val onNewChannel = Emitter.Listener { args ->
-        // To run on main thread
-        runOnUiThread {
-            val channelName = args[0] as String
-            val channelDescription = args[1] as String
-            val channelId = args[2] as String
-
-            MessageService.channels.add(Channel(channelName, channelDescription, channelId))
-            println("$channelName  $channelDescription  $channelId")
-        }
-    }
+    // Adapter
+    lateinit var channelAdapter: ArrayAdapter<Channel>
 
     // Called when it receives broadcast
     private val userDataChangeReceiver = object : BroadcastReceiver() {
@@ -60,9 +52,26 @@ class MainActivity : AppCompatActivity() {
                 userImageNavHeader.setBackgroundColor(UserDataService.returnAvatarColor(UserDataService.avatarColor))
 
                 loginButtonNavHeader.text = "Logout"
+
+                // Get messages at login
+                if (context != null) {
+                    MessageService.getChannels(context) { complete ->
+                        if (complete) {
+                            /**
+                             * This is like a reload data
+                             */
+                            channelAdapter.notifyDataSetChanged()
+                        }
+
+                    }
+                }
             }
         }
     }
+
+    /**
+     * Life Cycle
+     */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         socket.on("channelCreated", onNewChannel)
 
         setupViews()
+        setupAdapters()
     }
 
     override fun onResume() {
@@ -110,6 +120,11 @@ class MainActivity : AppCompatActivity() {
         sendMessageButton.setOnClickListener { sendMessageButtonClicked() }
     }
 
+    private fun setupAdapters() {           //Context              View type                    Data source
+        channelAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, MessageService.channels)
+        channel_list.adapter = channelAdapter   // MUST SET ADAPTER
+    }
+
     private fun loginButtonNavClicked() {
         if (AuthService.isLoggedIn) {
             UserDataService.logout()
@@ -121,6 +136,24 @@ class MainActivity : AppCompatActivity() {
         } else {
             val loginIntent = Intent(this, LoginActivity::class.java)
             startActivity(loginIntent)
+        }
+    }
+
+    /**
+     * Channels
+     */
+
+    private val onNewChannel = Emitter.Listener { args ->
+        // To run on main thread
+        runOnUiThread {
+            val channelName = args[0] as String
+            val channelDescription = args[1] as String
+            val channelId = args[2] as String
+
+            MessageService.channels.add(Channel(channelName, channelDescription, channelId))
+
+            // Notify that data has changed
+            channelAdapter.notifyDataSetChanged()
         }
     }
 
