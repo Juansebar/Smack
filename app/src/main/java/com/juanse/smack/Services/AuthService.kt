@@ -160,6 +160,9 @@ object AuthService {
             }
         }
 
+        /**
+         * Volley automatically handles background thread executions for you
+         */
         Volley.newRequestQueue(context).add(findUserRequest)
     }
 
