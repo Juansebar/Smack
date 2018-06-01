@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     // Called when it receives broadcast
     private val userDataChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (AuthService.isLoggedIn) {
+            if (App.sharedPreferences.isLoggedIn) {
                 // update elements in nav header
                 userNameNavHeader.text = UserDataService.name
                 userEmailNavHeader.text = UserDataService.email
@@ -90,6 +90,10 @@ class MainActivity : AppCompatActivity() {
 
         setupViews()
         setupAdapters()
+
+        if (App.sharedPreferences.isLoggedIn) {
+            AuthService.findUserByEmail(this) {}
+        }
     }
 
     override fun onResume() {
@@ -126,7 +130,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loginButtonNavClicked() {
-        if (AuthService.isLoggedIn) {
+        if (App.sharedPreferences.isLoggedIn) {
             UserDataService.logout()
             userNameNavHeader.text = ""
             userEmailNavHeader.text = ""
@@ -158,7 +162,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addChannelClicked() {
-        if (AuthService.isLoggedIn) {
+        if (App.sharedPreferences.isLoggedIn) {
             val builder = AlertDialog.Builder(this)
 
             // Initialize views using Inflator
