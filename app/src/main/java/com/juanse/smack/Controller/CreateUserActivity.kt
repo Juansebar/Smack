@@ -83,15 +83,15 @@ class CreateUserActivity : AppCompatActivity() {
         }
 
         if (emailValid && passwordValid && usernameValid) {
-            AuthService.registerUser(this, email!!, password!!) { success ->
+            AuthService.registerUser(email!!, password!!) { success ->
                 if (success) {
                     showToast("Succesfully Registered User")
 
-                    AuthService.loginUser(this, email, password) { loginSuccess ->
+                    AuthService.loginUser(email, password) { loginSuccess ->
                         if (loginSuccess) {
                             showToast("Successfully logged in user")
 
-                            AuthService.createUser(this, username!!, email, userAvatar, avatarColor) { success ->
+                            AuthService.createUser(username!!, email, userAvatar, avatarColor) { success ->
                                 if (success) {
                                     showToast("User created!")
 
